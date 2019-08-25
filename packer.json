@@ -1,0 +1,77 @@
+{
+  "variables": {
+    "aws_region": "us-west-2",
+    "aws_profile": "default",
+    "aws_subnet_id": "subnet-7af9ec33",
+    "aws_instance_type": "t2.small",
+    "chef_version": "14.5.33",
+    "environment": "bakery",
+    "os": "centos",
+    "os_type": "unix",
+    "ami_filter": "CentOS Linux 7 x86_64 HVM EBS *",
+    "ami_owner": "679593333241",
+    "ansible_roles_path": ".galaxy",
+    "install_dir": "/opt/aqha-ansible-bootstrap",
+    "deploy_playbook": "playbook-deploy.yml"
+  },
+  "builders": [
+    {
+        "type": "amazon-ebs",
+        "region": "{{user `aws_region`}}",
+        "profile": "{{user `aws_profile`}}",
+        "ssh_username": "{{user `os`}}",
+        "ami_name": "aqha-example-web-app-{{isotime \"200601020304\"}}",
+        "instance_type": "{{user `aws_instance_type`}}",
+        "source_ami_filter": {
+          "filters": {
+          "virtualization-type": "hvm",
+          "name": "{{user `ami_filter`}}",
+          "root-device-type": "ebs"
+          },
+          "owners": ["{{user `ami_owner`}}"],
+          "most_recent": true
+        },
+        "subnet_id": "{{user `aws_subnet_id`}}",
+        "launch_block_device_mappings": [
+          {
+          "device_name": "/dev/sda1",
+          "volume_size": 40,
+          "volume_type": "gp2",
+          "delete_on_termination": true
+          }
+        ],
+        "tags": {
+          "OS": "{{user `os_type`}}",
+          "Release": "{{isotime \"20060102\"}}",
+          "BaseAMIName": "{{ .SourceAMIName }}",
+          "Extra": "{{ .SourceAMITags.TagName }}"
+        }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "ansible",
+      "playbook_file": "./playbook.yml",
+      "extra_arguments": [ "--extra-vars", "install_dir={{user `install_dir`}} deploy_playbook={{user `deploy_playbook`}} ansible_roles_path={{user `ansible_roles_path`}}" ],
+      "ansible_env_vars": ["ANSIBLE_ROLES_PATH={{user `ansible_roles_path` }}"]
+    },
+    {
+      "type": "file",
+      "source": "playbook-deploy.yml",
+      "destination": "/tmp/{{user `deploy_playbook` }}"
+    },
+    {
+      "type": "shell",
+      "inline": ["sudo mv /tmp/{{user `deploy_playbook` }} {{user `install_dir` }}/ && sudo chown root.root {{user `install_dir` }}/{{user `deploy_playbook` }}"]
+    },
+    {
+      "type": "file",
+      "source": "{{user `ansible_roles_path`}}",
+      "destination": "/tmp/"
+    },
+    {
+      "type": "shell",
+      "inline": ["sudo mv /tmp/{{user `ansible_roles_path`}} {{user `install_dir` }}/ && sudo chown root.root {{user `install_dir` }}/{{user `ansible_roles_path`}}"]
+    }
+  ]
+}

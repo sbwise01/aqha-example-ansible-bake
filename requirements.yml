@@ -1,0 +1,6 @@
+- src: https://github.com/sbwise01/aqha-ansible-bootstrap.git
+  version: 0.1.6
+  name: sbwise01.aqha-ansible-bootstrap
+- src: https://github.com/sbwise01/aqha-example-web-app-role.git
+  version: 0.1.0
+  name: sbwise01.aqha-example-web-app

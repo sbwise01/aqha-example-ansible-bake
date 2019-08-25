@@ -1,0 +1,10 @@
+---
+
+- hosts: all
+  become: true
+  become_user: root
+  become_method: sudo
+  roles:
+    - { role: sbwise01.aqha-example-web-app,
+        deploy_mode: 'DEPLOY'
+      }
